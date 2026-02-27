@@ -5,3 +5,4 @@ plotly
 pypdf
 PyPDF2
 Pillow
+reportlab
