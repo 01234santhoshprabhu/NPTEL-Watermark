@@ -130,20 +130,25 @@
     const $ = id => document.getElementById(id);
     let auth, currentLogoBytes, currentLogoType;
     function setError(text) { $('auth-error').textContent = text || ''; }
+    function setMessage(text) { $('auth-message').textContent = text || ''; }
+    function googleProvider() { const provider = new firebase.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt:'select_account' }); return provider; }
     async function signIn() {
       const btn = $('auth-google-btn'); const label = btn.querySelector('span:first-child');
-      btn.disabled = true; label.textContent = 'Opening Google...'; setError('');
-      try { const provider = new firebase.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt:'select_account' }); await auth.signInWithPopup(provider); }
-      catch (err) { btn.disabled = false; label.textContent = 'Sign in with Google'; setError(err && err.message ? err.message : 'Google sign-in failed.'); }
+      if (!auth) { setError('Firebase Authentication is still loading. Please try again.'); return; }
+      btn.disabled = true; label.textContent = 'Opening Google...'; setMessage('Opening Google sign-in...'); setError('');
+      const unlockTimer = window.setTimeout(() => { btn.disabled = false; label.textContent = 'Sign in with Google'; setMessage('Sign in once to use Count, Tool, and Watermark.'); }, 6000);
+      try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); await auth.signInWithRedirect(googleProvider()); }
+      catch (err) { window.clearTimeout(unlockTimer); btn.disabled = false; label.textContent = 'Sign in with Google'; setMessage('Sign in once to use Count, Tool, and Watermark.'); setError(err && err.message ? err.message : 'Google sign-in failed.'); }
     }
     function initAuth() {
       if (!window.firebase) { document.body.classList.add('auth-locked'); setError('Firebase did not load.'); return; }
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
+      auth.getRedirectResult().catch(err => setError(err.message || 'Google sign-in redirect failed.'));
       $('auth-google-btn').addEventListener('click', signIn);
       $('signout').addEventListener('click', () => auth.signOut());
       auth.onAuthStateChanged(user => {
-        if (!user) { document.body.classList.remove('auth-ready'); document.body.classList.add('auth-locked'); return; }
+        if (!user) { const btn = $('auth-google-btn'); if (btn) btn.disabled = false; document.body.classList.remove('auth-ready'); document.body.classList.add('auth-locked'); return; }
         document.body.classList.remove('auth-pending','auth-locked'); document.body.classList.add('auth-ready');
         $('user-pill').textContent = user.email || user.displayName || 'Signed in';
       });
