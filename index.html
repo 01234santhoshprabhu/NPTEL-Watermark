@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NPTEL Watermark</title>
+  <style>
+    :root { --bg:#f4f7fb; --ink:#172033; --muted:#667085; --line:#d9dee8; --blue:#1769d8; --green:#0f766e; --nav:#111d2f; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI", Arial, sans-serif; }
+    .auth-pending .app, .auth-locked .app { display:none !important; }
+    .auth-ready #auth-screen { display:none !important; }
+    .auth-screen { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; padding:24px; background:linear-gradient(135deg,#eef4fb,#f8fbff 52%,#edf5ff); }
+    .auth-card { width:min(440px,100%); border:1px solid var(--line); border-radius:8px; background:#fff; box-shadow:0 24px 70px rgba(15,34,65,.16); padding:30px; text-align:center; }
+    .auth-mark { width:50px; height:50px; margin:0 auto 14px; display:grid; place-items:center; border-radius:8px; background:linear-gradient(135deg,#1976d2,#15b97e); color:#fff; font-weight:800; }
+    .auth-kicker { color:#64748b; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px; }
+    .auth-card h1 { margin:0 0 8px; font-size:26px; }
+    .auth-card p { margin:0 0 20px; color:#5f6f86; font-size:14px; line-height:1.5; }
+    .auth-google-btn { position:relative; width:100%; min-height:46px; display:inline-flex; align-items:center; justify-content:space-between; gap:12px; overflow:hidden; border:0; border-radius:6px; padding:0 14px 0 22px; background:var(--blue); color:#fff; font-weight:800; cursor:pointer; box-shadow:0 10px 22px rgba(23,105,216,.22); isolation:isolate; transition:transform .25s ease, box-shadow .25s ease; }
+    .auth-google-btn::before { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(120deg,rgba(255,255,255,.16),transparent 34%,rgba(255,255,255,.22) 52%,transparent 70%); transform:translateX(-110%); transition:transform .65s ease; }
+    .auth-google-btn:hover, .auth-google-btn:focus-visible { transform:translateY(-1px); box-shadow:0 16px 30px rgba(23,105,216,.28); }
+    .auth-google-btn:hover::before, .auth-google-btn:focus-visible::before { transform:translateX(110%); }
+    .login-scene { position:relative; width:58px; height:30px; flex:0 0 58px; }
+    .login-scene::before { content:""; position:absolute; right:2px; top:3px; width:18px; height:24px; border-radius:3px; background:#fff; box-shadow:inset -5px 0 0 rgba(23,105,216,.24),0 0 0 2px rgba(255,255,255,.46); }
+    .login-scene::after { content:""; position:absolute; left:6px; top:9px; width:8px; height:8px; border-radius:50%; background:#fff; box-shadow:0 9px 0 1px #fff,9px 12px 0 -1px #fff,17px 15px 0 -2px #fff; animation:authWalk 1.45s ease-in-out infinite; }
+    .auth-google-btn:hover .login-scene::after { animation-duration:.78s; }
+    .auth-google-btn:active .login-scene::before { transform:perspective(80px) rotateY(-18deg); transform-origin:right center; }
+    @keyframes authWalk { 0%,100% { transform:translateX(0); } 50% { transform:translateX(18px); } }
+    .auth-error { min-height:18px; margin-top:14px; color:#dc2626; font-size:12px; }
+    .app { min-height:100vh; display:grid; grid-template-columns:260px 1fr; }
+    aside { background:var(--nav); color:#fff; padding:18px 14px; position:sticky; top:0; height:100vh; }
+    .brand { display:flex; gap:12px; align-items:center; font-weight:800; font-size:18px; padding:8px 4px 24px; }
+    .brand-mark { width:48px; height:48px; border-radius:10px; display:grid; place-items:center; background:linear-gradient(135deg,#20a4f3,#1769d8); }
+    .nav-label { color:#91a4c0; text-transform:uppercase; font-size:12px; letter-spacing:.12em; font-weight:800; margin:18px 10px 10px; }
+    .nav-item { width:100%; min-height:44px; border-radius:8px; display:flex; align-items:center; gap:12px; padding:0 14px; color:#dbe6f5; text-decoration:none; font-weight:700; margin-bottom:6px; background:transparent; border:0; }
+    .nav-item:hover, .nav-item.active { color:#fff; background:#193253; }
+    .content { min-width:0; }
+    header { position:sticky; top:0; z-index:5; background:#fff; border-bottom:1px solid var(--line); padding:18px 24px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    h1 { margin:0; font-size:24px; }
+    .sub { color:var(--muted); font-size:13px; margin-top:4px; }
+    .header-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .pill-link, .signout { min-height:36px; display:inline-flex; align-items:center; border-radius:999px; padding:0 14px; background:var(--blue); color:#fff; text-decoration:none; border:0; font-weight:800; font-size:12px; cursor:pointer; }
+    .pill-link.green { background:var(--green); }
+    .user-pill { min-height:36px; display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:0 12px; background:#fff; font-size:12px; font-weight:700; }
+    main { max-width:1180px; margin:0 auto; padding:24px; }
+    .hero { background:linear-gradient(135deg,#12213a,#285c9e 62%,#2f89ea); color:#fff; border-radius:18px; padding:28px; margin-bottom:18px; box-shadow:0 18px 40px rgba(15,35,65,.09); }
+    .hero h2 { margin:10px 0 6px; font-size:32px; }
+    .hero p { margin:0; color:#dbe8f8; font-weight:600; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:8px; padding:20px; box-shadow:0 18px 40px rgba(15,35,65,.07); margin-bottom:16px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    label { display:block; color:#344054; font-weight:700; margin:12px 0 6px; }
+    input, select { width:100%; border:1px solid #cfd7e6; border-radius:8px; padding:11px; font:inherit; background:#fff; }
+    input[type="range"] { padding:0; }
+    .button { border:0; border-radius:8px; min-height:44px; padding:0 16px; background:var(--blue); color:#fff; font-weight:800; cursor:pointer; }
+    .button:disabled { opacity:.6; cursor:wait; }
+    .status { color:var(--muted); line-height:1.5; }
+    .downloads a { display:inline-flex; align-items:center; min-height:38px; padding:0 12px; border-radius:8px; background:#edf4ff; color:var(--blue); font-weight:800; text-decoration:none; margin:6px 8px 6px 0; }
+    canvas { width:100%; max-width:420px; border:1px dashed #cfd7e6; border-radius:8px; background:#fff; }
+    @media (max-width:900px) { .app { grid-template-columns:1fr; } aside { position:relative; height:auto; } .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body class="auth-pending">
+  <div id="auth-screen" class="auth-screen" aria-live="polite">
+    <div class="auth-card">
+      <div class="auth-mark">N</div>
+      <div class="auth-kicker">NPTEL Portal Team</div>
+      <h1>Watermark Login</h1>
+      <p id="auth-message">Sign in once to use Count, Tool, and Watermark.</p>
+      <button id="auth-google-btn" class="auth-google-btn" type="button"><span>Sign in with Google</span><span class="login-scene" aria-hidden="true"></span></button>
+      <div id="auth-error" class="auth-error" role="alert"></div>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="brand-mark">N</div><div>NPTEL<small style="display:block;color:#9fb0ca">Watermark</small></div></div>
+      <div class="nav-label">Portal</div>
+      <a class="nav-item" href="https://01234santhoshprabhu.github.io/count/">Count</a>
+      <a class="nav-item" href="https://01234santhoshprabhu.github.io/Tool/">Tool</a>
+      <a class="nav-item active" href="./">Watermark</a>
+      <div class="nav-label">Tool</div>
+      <a class="nav-item" href="#watermark">PDF Watermark</a>
+    </aside>
+    <div class="content">
+      <header>
+        <div><h1>NPTEL PDF Watermark System</h1><div class="sub">Upload PDFs and apply a secure logo watermark in your browser.</div></div>
+        <div class="header-actions">
+          <a class="pill-link" href="https://01234santhoshprabhu.github.io/count/">Count</a>
+          <a class="pill-link green" href="https://01234santhoshprabhu.github.io/Tool/">Tool</a>
+          <span id="user-pill" class="user-pill"></span>
+          <button id="signout" class="signout" type="button">Sign out</button>
+        </div>
+      </header>
+      <main>
+        <section class="hero"><div style="letter-spacing:.14em;font-weight:800;color:#c8d8ec;font-size:12px">SP</div><h2>Watermark</h2><p>Batch watermark PDF files without uploading them to a server.</p></section>
+        <section id="watermark" class="panel">
+          <div class="grid">
+            <div>
+              <label for="pdfs">Upload PDF Files</label>
+              <input id="pdfs" type="file" accept="application/pdf" multiple>
+              <label for="logo">Upload Logo Image</label>
+              <input id="logo" type="file" accept="image/png,image/jpeg">
+              <label for="size">Watermark Size: <span id="sizeLabel">40</span>%</label>
+              <input id="size" type="range" min="10" max="80" value="40">
+              <label for="opacity">Transparency: <span id="opacityLabel">0.30</span></label>
+              <input id="opacity" type="range" min="0.05" max="1" step="0.05" value="0.30">
+              <label for="rotation">Rotation: <span id="rotationLabel">0</span> deg</label>
+              <input id="rotation" type="range" min="-180" max="180" value="0">
+              <label for="position">Position</label>
+              <select id="position"><option>Center</option><option>Top Center</option><option>Bottom Center</option></select>
+              <p><button id="apply" class="button" type="button">Apply Watermark to All PDFs</button></p>
+              <div id="status" class="status">Choose PDF files and a logo to begin.</div>
+            </div>
+            <div>
+              <label>Preview</label>
+              <canvas id="preview" width="600" height="800"></canvas>
+              <div id="downloads" class="downloads"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script>
+    const firebaseConfig = { apiKey:'AIzaSyButgD2N77doaabtGf-uzffjA5Xc4lh_sU', authDomain:'nptelportalteam.firebaseapp.com', projectId:'nptelportalteam', storageBucket:'nptelportalteam.firebasestorage.app', messagingSenderId:'574729426785', appId:'1:574729426785:web:12c57aa54179167eeb1720' };
+    const $ = id => document.getElementById(id);
+    let auth, currentLogoBytes, currentLogoType;
+    function setError(text) { $('auth-error').textContent = text || ''; }
+    async function signIn() {
+      const btn = $('auth-google-btn'); const label = btn.querySelector('span:first-child');
+      btn.disabled = true; label.textContent = 'Opening Google...'; setError('');
+      try { const provider = new firebase.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt:'select_account' }); await auth.signInWithPopup(provider); }
+      catch (err) { btn.disabled = false; label.textContent = 'Sign in with Google'; setError(err && err.message ? err.message : 'Google sign-in failed.'); }
+    }
+    function initAuth() {
+      if (!window.firebase) { document.body.classList.add('auth-locked'); setError('Firebase did not load.'); return; }
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      $('auth-google-btn').addEventListener('click', signIn);
+      $('signout').addEventListener('click', () => auth.signOut());
+      auth.onAuthStateChanged(user => {
+        if (!user) { document.body.classList.remove('auth-ready'); document.body.classList.add('auth-locked'); return; }
+        document.body.classList.remove('auth-pending','auth-locked'); document.body.classList.add('auth-ready');
+        $('user-pill').textContent = user.email || user.displayName || 'Signed in';
+      });
+    }
+    function updateLabels() { $('sizeLabel').textContent = $('size').value; $('opacityLabel').textContent = Number($('opacity').value).toFixed(2); $('rotationLabel').textContent = $('rotation').value; drawPreview(); }
+    async function readLogo() {
+      const file = $('logo').files[0]; if (!file) { currentLogoBytes = null; drawPreview(); return; }
+      currentLogoType = file.type; currentLogoBytes = await file.arrayBuffer(); drawPreview();
+    }
+    function drawPreview() {
+      const canvas = $('preview'), ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.strokeStyle='#d9dee8'; ctx.strokeRect(35,45,530,710);
+      const file = $('logo').files[0]; if (!file) { ctx.fillStyle='#667085'; ctx.font='20px Segoe UI'; ctx.fillText('Logo preview appears here', 175, 400); return; }
+      const img = new Image(); img.onload = () => { const size = canvas.width * (Number($('size').value)/100); let x=(canvas.width-size)/2, y=(canvas.height-size)/2; if ($('position').value==='Top Center') y=50; if ($('position').value==='Bottom Center') y=canvas.height-size-50; ctx.save(); ctx.globalAlpha=Number($('opacity').value); ctx.translate(canvas.width/2, canvas.height/2); ctx.rotate(Number($('rotation').value)*Math.PI/180); ctx.translate(-canvas.width/2, -canvas.height/2); ctx.drawImage(img,x,y,size,size); ctx.restore(); }; img.src = URL.createObjectURL(file);
+    }
+    async function applyWatermark() {
+      const files = [...$('pdfs').files]; const logo = $('logo').files[0]; const status = $('status'); const downloads = $('downloads'); downloads.innerHTML = '';
+      if (!files.length || !logo) { status.textContent = 'Please choose PDF files and a logo image.'; return; }
+      const btn = $('apply'); btn.disabled = true; status.textContent = 'Processing PDFs...';
+      try {
+        const logoBytes = await logo.arrayBuffer();
+        for (const file of files) {
+          status.textContent = `Processing ${file.name}...`;
+          const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+          const logoImage = logo.type.includes('png') ? await pdfDoc.embedPng(logoBytes) : await pdfDoc.embedJpg(logoBytes);
+          const scalePercent = Number($('size').value) / 100;
+          const alpha = Number($('opacity').value);
+          const angle = PDFLib.degrees(Number($('rotation').value));
+          for (const page of pdfDoc.getPages()) {
+            const { width, height } = page.getSize(); const w = width * scalePercent; const h = w * (logoImage.height / logoImage.width);
+            let x=(width-w)/2, y=(height-h)/2; if ($('position').value==='Top Center') y=height-h-50; if ($('position').value==='Bottom Center') y=50;
+            page.drawImage(logoImage, { x, y, width:w, height:h, rotate:angle, opacity:alpha });
+          }
+          const bytes = await pdfDoc.save(); const blob = new Blob([bytes], { type:'application/pdf' }); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=file.name.replace(/\.pdf$/i,'') + '_watermarked.pdf'; a.textContent='Download ' + a.download; downloads.appendChild(a);
+        }
+        status.textContent = 'All PDFs processed successfully.';
+      } catch (err) { status.textContent = 'Watermark failed: ' + (err.message || err); }
+      finally { btn.disabled = false; }
+    }
+    ['size','opacity','rotation','position'].forEach(id => $(id).addEventListener('input', updateLabels));
+    $('logo').addEventListener('change', readLogo); $('apply').addEventListener('click', applyWatermark); updateLabels(); initAuth();
+  </script>
+</body>
+</html>
