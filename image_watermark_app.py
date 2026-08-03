@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -8,7 +7,7 @@ from PIL import Image, ImageEnhance
 
 COUNT_URL = "https://01234santhoshprabhu.github.io/count/"
 TOOL_URL = "https://01234santhoshprabhu.github.io/Tool/"
-WATERMARK_URL = "https://nptel-watermark.onrender.com/"
+WATERMARK_URL = "https://01234santhoshprabhu.github.io/NPTEL-Watermark/"
 
 FIREBASE_CONFIG = {
     "apiKey": "AIzaSyButgD2N77doaabtGf-uzffjA5Xc4lh_sU",
@@ -33,173 +32,7 @@ def get_query_value(name):
     return value
 
 
-def set_query_values(**values):
-    cleaned = {key: value for key, value in values.items() if value}
-    try:
-        st.query_params.clear()
-        for key, value in cleaned.items():
-            st.query_params[key] = value
-    except Exception:
-        st.experimental_set_query_params(**cleaned)
-
-
-def firebase_login_gate():
-    signed_out = get_query_value("wm_signed_out")
-    auth_email = get_query_value("wm_auth_email")
-    if auth_email and not signed_out:
-        return auth_email
-
-    components.html(
-        f"""
-        <div style="min-height:620px;display:grid;place-items:center;background:linear-gradient(135deg,#eef4fb,#f8fbff 52%,#edf5ff);font-family:Segoe UI,Arial,sans-serif;">
-          <div style="width:min(440px,calc(100% - 32px));padding:30px;border:1px solid #d9dee8;border-radius:8px;background:#fff;box-shadow:0 24px 70px rgba(15,34,65,.16);text-align:center;">
-            <div style="width:50px;height:50px;margin:0 auto 14px;display:grid;place-items:center;border-radius:8px;background:linear-gradient(135deg,#1976d2,#15b97e);color:#fff;font-weight:800;">N</div>
-            <div style="color:#64748b;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;">NPTEL Portal Team</div>
-            <h1 style="margin:0 0 8px;color:#172033;font-size:26px;">Watermark Login</h1>
-            <p id="msg" style="margin:0 0 20px;color:#5f6f86;font-size:14px;line-height:1.5;">Sign in once to use Count, Tool, and Watermark.</p>
-            <button id="login" class="animated-login-btn"><span>Sign in with Google</span><span class="login-scene" aria-hidden="true"></span></button>
-            <div id="error" style="min-height:18px;margin-top:14px;color:#dc2626;font-size:12px;line-height:1.45;"></div>
-            <div style="display:flex;gap:8px;margin-top:18px;justify-content:center;flex-wrap:wrap;">
-              <a href="{COUNT_URL}" target="_top" style="color:#1769d8;font-weight:800;text-decoration:none;">Count</a>
-              <a href="{TOOL_URL}" target="_top" style="color:#1769d8;font-weight:800;text-decoration:none;">Tool</a>
-            </div>
-          </div>
-        </div>
-                <style>
-          .animated-login-btn {{
-            position: relative;
-            width: 100%;
-            min-height: 46px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            overflow: hidden;
-            border: 0;
-            border-radius: 6px;
-            padding: 0 14px 0 22px;
-            background: #1769d8;
-            color: #fff;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 10px 22px rgba(23,105,216,.22);
-            isolation: isolate;
-            transition: transform .25s ease, box-shadow .25s ease;
-          }}
-          .animated-login-btn::before {{
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            background: linear-gradient(120deg, rgba(255,255,255,.16), transparent 34%, rgba(255,255,255,.22) 52%, transparent 70%);
-            transform: translateX(-110%);
-            transition: transform .65s ease;
-          }}
-          .animated-login-btn:hover,
-          .animated-login-btn:focus-visible {{
-            transform: translateY(-1px);
-            box-shadow: 0 16px 30px rgba(23,105,216,.28);
-          }}
-          .animated-login-btn:hover::before,
-          .animated-login-btn:focus-visible::before {{ transform: translateX(110%); }}
-          .login-scene {{
-            position: relative;
-            width: 58px;
-            height: 30px;
-            flex: 0 0 58px;
-          }}
-          .login-scene::before {{
-            content: "";
-            position: absolute;
-            right: 2px;
-            top: 3px;
-            width: 18px;
-            height: 24px;
-            border-radius: 3px;
-            background: #fff;
-            box-shadow: inset -5px 0 0 rgba(23,105,216,.24), 0 0 0 2px rgba(255,255,255,.46);
-          }}
-          .login-scene::after {{
-            content: "";
-            position: absolute;
-            left: 6px;
-            top: 9px;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 9px 0 1px #fff, 9px 12px 0 -1px #fff, 17px 15px 0 -2px #fff;
-            animation: authWalk 1.45s ease-in-out infinite;
-          }}
-          .animated-login-btn:hover .login-scene::after,
-          .animated-login-btn:focus-visible .login-scene::after {{ animation-duration: .78s; }}
-          .animated-login-btn:active .login-scene::before {{
-            transform: perspective(80px) rotateY(-18deg);
-            transform-origin: right center;
-          }}
-          @keyframes authWalk {{
-            0%, 100% {{ transform: translateX(0); }}
-            50% {{ transform: translateX(18px); }}
-          }}
-          @media (prefers-reduced-motion: reduce) {{
-            .animated-login-btn,
-            .animated-login-btn::before,
-            .login-scene::after {{ animation: none !important; transition: none !important; }}
-          }}
-        </style>        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-        <script>
-          const firebaseConfig = {FIREBASE_CONFIG};
-          const forceSignedOut = {str(bool(get_query_value("wm_signed_out"))).lower()};
-          if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-          const auth = firebase.auth();
-          const login = document.getElementById('login');
-          const error = document.getElementById('error');
-          const msg = document.getElementById('msg');
-          const loginLabel = login.querySelector('span:first-child');
-          function setLoginText(text) {{ loginLabel.textContent = text; }}
-          function enter(user) {{
-            const email = encodeURIComponent(user.email || user.displayName || 'signed-in');
-            const url = new URL(window.parent.location.href);
-            url.searchParams.set('wm_auth_email', email);
-            url.searchParams.delete('wm_signed_out');
-            window.parent.location.href = url.toString();
-          }}
-          login.addEventListener('click', async () => {{
-            login.disabled = true;
-            setLoginText('Opening Google...');
-            error.textContent = '';
-            try {{
-              const provider = new firebase.auth.GoogleAuthProvider();
-              provider.setCustomParameters({{ prompt: 'select_account' }});
-              const result = await auth.signInWithPopup(provider);
-              enter(result.user);
-            }} catch (err) {{
-              login.disabled = false;
-              setLoginText('Sign in with Google');
-              error.textContent = err && err.message ? err.message : 'Google sign-in failed.';
-            }}
-          }});
-          auth.onAuthStateChanged(async user => {{
-            if (forceSignedOut && user) {{
-              await auth.signOut();
-              msg.textContent = 'Signed out. Choose Google sign-in to continue.';
-              return;
-            }}
-            if (user && !forceSignedOut) {{
-              msg.textContent = 'Signed in. Opening Watermark...';
-              enter(user);
-            }}
-          }});
-        </script>
-        """,
-        height=660,
-    )
-    st.stop()
-
-
-signed_in_email = firebase_login_gate()
-
+signed_in_email = "Streamlit Watermark"
 st.markdown("""
     <style>
     .main-title {
@@ -264,10 +97,11 @@ st.markdown("""
 st.markdown(
     f"""
     <div class="portal-bar">
-      <div class="portal-user">Signed in: {signed_in_email}</div>
+      <div class="portal-user">Watermark tool ready</div>
       <div class="portal-links">
         <a href="{COUNT_URL}" target="_self">Count</a>
         <a class="secondary" href="{TOOL_URL}" target="_self">Tool</a>
+        <a href="{WATERMARK_URL}" target="_self">Secure Login</a>
       </div>
     </div>
     """,
@@ -277,9 +111,6 @@ st.markdown(
 st.markdown('<p class="main-title">NPTEL PDF Watermark System</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-text">Upload multiple PDFs and apply secure logo watermark.</p>', unsafe_allow_html=True)
 
-if st.button("Sign out"):
-    set_query_values(wm_signed_out="1")
-    st.rerun()
 
 col1, col2 = st.columns([1, 1])
 
