@@ -57,7 +57,7 @@ def firebase_login_gate():
             <div style="color:#64748b;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;">NPTEL Portal Team</div>
             <h1 style="margin:0 0 8px;color:#172033;font-size:26px;">Watermark Login</h1>
             <p id="msg" style="margin:0 0 20px;color:#5f6f86;font-size:14px;line-height:1.5;">Sign in once to use Count, Tool, and Watermark.</p>
-            <button id="login" style="width:100%;border:0;border-radius:6px;min-height:44px;background:#1769d8;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 10px 22px rgba(23,105,216,.22);">Sign in with Google</button>
+            <button id="login" class="animated-login-btn"><span>Sign in with Google</span><span class="login-scene" aria-hidden="true"></span></button>
             <div id="error" style="min-height:18px;margin-top:14px;color:#dc2626;font-size:12px;line-height:1.45;"></div>
             <div style="display:flex;gap:8px;margin-top:18px;justify-content:center;flex-wrap:wrap;">
               <a href="{COUNT_URL}" target="_top" style="color:#1769d8;font-weight:800;text-decoration:none;">Count</a>
@@ -65,7 +65,88 @@ def firebase_login_gate():
             </div>
           </div>
         </div>
-        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+                <style>
+          .animated-login-btn {{
+            position: relative;
+            width: 100%;
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            overflow: hidden;
+            border: 0;
+            border-radius: 6px;
+            padding: 0 14px 0 22px;
+            background: #1769d8;
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 22px rgba(23,105,216,.22);
+            isolation: isolate;
+            transition: transform .25s ease, box-shadow .25s ease;
+          }}
+          .animated-login-btn::before {{
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(120deg, rgba(255,255,255,.16), transparent 34%, rgba(255,255,255,.22) 52%, transparent 70%);
+            transform: translateX(-110%);
+            transition: transform .65s ease;
+          }}
+          .animated-login-btn:hover,
+          .animated-login-btn:focus-visible {{
+            transform: translateY(-1px);
+            box-shadow: 0 16px 30px rgba(23,105,216,.28);
+          }}
+          .animated-login-btn:hover::before,
+          .animated-login-btn:focus-visible::before {{ transform: translateX(110%); }}
+          .login-scene {{
+            position: relative;
+            width: 58px;
+            height: 30px;
+            flex: 0 0 58px;
+          }}
+          .login-scene::before {{
+            content: "";
+            position: absolute;
+            right: 2px;
+            top: 3px;
+            width: 18px;
+            height: 24px;
+            border-radius: 3px;
+            background: #fff;
+            box-shadow: inset -5px 0 0 rgba(23,105,216,.24), 0 0 0 2px rgba(255,255,255,.46);
+          }}
+          .login-scene::after {{
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 9px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 9px 0 1px #fff, 9px 12px 0 -1px #fff, 17px 15px 0 -2px #fff;
+            animation: authWalk 1.45s ease-in-out infinite;
+          }}
+          .animated-login-btn:hover .login-scene::after,
+          .animated-login-btn:focus-visible .login-scene::after {{ animation-duration: .78s; }}
+          .animated-login-btn:active .login-scene::before {{
+            transform: perspective(80px) rotateY(-18deg);
+            transform-origin: right center;
+          }}
+          @keyframes authWalk {{
+            0%, 100% {{ transform: translateX(0); }}
+            50% {{ transform: translateX(18px); }}
+          }}
+          @media (prefers-reduced-motion: reduce) {{
+            .animated-login-btn,
+            .animated-login-btn::before,
+            .login-scene::after {{ animation: none !important; transition: none !important; }}
+          }}
+        </style>        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
         <script>
           const firebaseConfig = {FIREBASE_CONFIG};
@@ -75,6 +156,8 @@ def firebase_login_gate():
           const login = document.getElementById('login');
           const error = document.getElementById('error');
           const msg = document.getElementById('msg');
+          const loginLabel = login.querySelector('span:first-child');
+          function setLoginText(text) {{ loginLabel.textContent = text; }}
           function enter(user) {{
             const email = encodeURIComponent(user.email || user.displayName || 'signed-in');
             const url = new URL(window.parent.location.href);
@@ -84,7 +167,7 @@ def firebase_login_gate():
           }}
           login.addEventListener('click', async () => {{
             login.disabled = true;
-            login.textContent = 'Opening Google...';
+            setLoginText('Opening Google...');
             error.textContent = '';
             try {{
               const provider = new firebase.auth.GoogleAuthProvider();
@@ -93,7 +176,7 @@ def firebase_login_gate():
               enter(result.user);
             }} catch (err) {{
               login.disabled = false;
-              login.textContent = 'Sign in with Google';
+              setLoginText('Sign in with Google');
               error.textContent = err && err.message ? err.message : 'Google sign-in failed.';
             }}
           }});
