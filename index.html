@@ -133,18 +133,33 @@
     function setMessage(text) { $('auth-message').textContent = text || ''; }
     function googleProvider() { const provider = new firebase.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt:'select_account' }); return provider; }
     async function signIn() {
-      const btn = $('auth-google-btn'); const label = btn.querySelector('span:first-child');
-      if (!auth) { setError('Firebase Authentication is still loading. Please try again.'); return; }
-      btn.disabled = true; label.textContent = 'Opening Google...'; setMessage('Opening Google sign-in...'); setError('');
-      const unlockTimer = window.setTimeout(() => { btn.disabled = false; label.textContent = 'Sign in with Google'; setMessage('Sign in once to use Count, Tool, and Watermark.'); }, 6000);
-      try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); await auth.signInWithRedirect(googleProvider()); }
-      catch (err) { window.clearTimeout(unlockTimer); btn.disabled = false; label.textContent = 'Sign in with Google'; setMessage('Sign in once to use Count, Tool, and Watermark.'); setError(err && err.message ? err.message : 'Google sign-in failed.'); }
-    }
-    function initAuth() {
+      const btn = $('auth-google-btn');
+      const label = btn.querySelector('span:first-child');
+      if (!auth) { setError('Firebase Authentication is still loading. Please refresh and try again.'); return; }
+      btn.disabled = true;
+      label.textContent = 'Opening Google...';
+      setMessage('Choose your Google account in the popup window.');
+      setError('');
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const result = await auth.signInWithPopup(googleProvider());
+        if (!result || !result.user) throw new Error('Google sign-in did not return an account.');
+      } catch (err) {
+        btn.disabled = false;
+        label.textContent = 'Sign in with Google';
+        setMessage('Sign in once to use Count, Tool, and Watermark.');
+        if (err && err.code === 'auth/popup-blocked') {
+          setError('Chrome blocked the Google popup. Allow pop-ups for this site, then click again.');
+        } else if (err && err.code === 'auth/popup-closed-by-user') {
+          setError('Google sign-in was closed before finishing. Click again to retry.');
+        } else {
+          setError(err && err.message ? err.message : 'Google sign-in failed. Please try again.');
+        }
+      }
+    }    function initAuth() {
       if (!window.firebase) { document.body.classList.add('auth-locked'); setError('Firebase did not load.'); return; }
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
-      auth.getRedirectResult().catch(err => setError(err.message || 'Google sign-in redirect failed.'));
       $('auth-google-btn').addEventListener('click', signIn);
       $('signout').addEventListener('click', () => auth.signOut());
       auth.onAuthStateChanged(user => {
